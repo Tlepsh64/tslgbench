@@ -48,7 +48,7 @@ CUDA_VISIBLE_DEVICES=0 python -m experiments.run_synthetic config=defaults
 
 Edit or add a config under `experiments/config/synthetic/` to switch graph
 samplers (`sns`, `doublecv`, `imle`, `aimle`) or model settings. Real-data
-(AQI / METR-LA) experiments are run via `experiments/run_real.py`.
+(PEMS-BAY / METR-LA) experiments are run via `experiments/run_real.py`.
 
 ## Acknowledgments
 
