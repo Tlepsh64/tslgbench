@@ -1,0 +1,69 @@
+#### Experiment params ########################################################
+hydra:
+  run:
+    dir: logs/synthetic/aimle_topk_trials/${experiment_name}/${dataset.graph_type}_n${dataset.node_num}/${graph_module.hparams.map_solver}_k${graph_module.hparams.k}_sym${graph_module.hparams.symmetric_perturbation}/ns${graph_module.hparams.nb_samples}_nm${graph_module.hparams.nb_marginal_samples}_mom${graph_module.hparams.use_momentum}/nt${graph_module.hparams.noise_temp}_clip${clip_grad}/${now:%Y-%m-%d_%H-%M-%S}
+
+tags:
+  - 'synthetic'
+  - ${experiment_name}
+
+workers: 0
+num_threads: 1
+num_runs: 10
+
+#### Dataset params ###########################################################
+dataset:
+  name: gpolyvar # gpolyvar returns gpolyvar_tricom graph. stochastic block model and barabasi albert model graphs should be added.
+  graph_type: tricom
+  node_num: 30  # Number of nodes (must be divisible by 6 for tricom)
+  connectivity: line  # Community connectivity: "line" or "triangle"
+  time_series_noise: 0.4  # Standard deviation of Gaussian noise in autoregressive process
+  splits:
+    val_len: 0.1
+    test_len: 0.2
+
+#### Windowing params #########################################################
+window: 12
+horizon: 1
+stride: 1
+batch_size: 128
+
+#### Training params ##########################################################
+epochs: 100
+patience: 5
+batches_epoch: -1
+visualize: True
+
+graph_mode: aimle
+mc_samples: 1
+#lam: null
+#sf_weight: 1.
+#use_baseline: rloo
+#variance_reduced: False
+
+graph_module:
+  hparams:
+    tau: 1.0
+    noise_temp: 15.0
+    sampler: aimle
+    dummy_nodes: 0
+    nb_samples: 1
+    nb_marginal_samples: 1  # Number of samples averaged for marginal estimation (variance reduction)
+    symmetric_perturbation: True  # Set to true for central difference, false for forward difference
+    map_solver: topk  # MAP solver: "topk" for k-subset selection, "kruskal" for MST
+    use_momentum: False  # Set to true to use momentum for adaptive β updates
+    k: 5  # Number of edges per node (topk solver); also shapes the SumOfGamma noise distribution
+
+clip_grad: False # always true(even if this is false) for aimle in its latent graph predictor, needs to change.
+optimizer:
+  hparams:
+    lr: 0.05
+    weight_decay: 0.
+
+#### Experiment name ###########################################################
+experiment_name: graph_id
+
+#### Learn One Edge specific params (only used when experiment_name=learn_one_edge)
+hidden_edge_idx: 0
+hidden_edge_seed: 42
+

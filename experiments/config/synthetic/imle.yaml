@@ -1,0 +1,65 @@
+#### Experiment params ########################################################
+hydra:
+  run:
+    dir: logs/synthetic/${experiment_name}/node_num_${dataset.node_num}/${dataset.graph_type}/${graph_module.hparams.sampler}/${graph_mode}/mc_cnt_${mc_samples}/perturbation_${graph_module.hparams.lambda_val}/noise_temp_${graph_module.hparams.noise_temp}/${now:%Y-%m-%d_%H-%M-%S}
+
+tags:
+  - 'synthetic'
+  - ${experiment_name}
+
+workers: 0
+num_threads: 1
+
+#### Dataset params ###########################################################
+dataset:
+  name: gpolyvar # gpolyvar returns gpolyvar_tricom graph. stochastic block model and barabasi albert model graphs should be added.
+  graph_type: tricom
+  node_num: 30  # Number of nodes (must be divisible by 6 for tricom)
+  connectivity: line  # Community connectivity: "line" or "triangle"
+  time_series_noise: 0.4  # Standard deviation of Gaussian noise in autoregressive process
+  splits:
+    val_len: 0.1
+    test_len: 0.2
+
+#### Windowing params #########################################################
+window: 12
+horizon: 1
+stride: 1
+batch_size: 128
+
+#### Training params ##########################################################
+epochs: 50
+patience: 400
+batches_epoch: -1
+visualize: False
+
+graph_mode: imle
+mc_samples: 1
+#lam: null
+#sf_weight: 1.
+#use_baseline: rloo
+#variance_reduced: False
+
+graph_module:
+  hparams:
+    #k: 5
+    tau: 1.0
+    noise_temp: 15.0
+    lambda_val: 1000.0
+    sampler: imle
+    dummy_nodes: 0
+    nb_samples: 1
+
+clip_grad: False
+optimizer:
+  hparams:
+    lr: 0.05
+    weight_decay: 0.
+
+#### Experiment name ###########################################################
+experiment_name: graph_id
+
+#### Learn One Edge specific params (only used when experiment_name=learn_one_edge)
+hidden_edge_idx: 0
+hidden_edge_seed: 42
+

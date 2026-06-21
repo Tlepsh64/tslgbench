@@ -1,0 +1,65 @@
+#### Experiment params ########################################################
+hydra:
+  run:
+    dir: logs/real/${dataset.name}/${model_class}/${graph_module.hparams.sampler}/${graph_mode}/mc_cnt_${mc_samples}/baseline_${use_baseline}_varred_${variance_reduced}/${now:%Y-%m-%d_%H-%M-%S}
+
+tags:
+  - 'real'
+  - ${dataset.name}
+
+model_class: tts_model
+
+workers: 0
+num_threads: 1
+num_runs: 1
+
+#### Dataset params ###########################################################
+dataset:
+  name: air_quality
+  small: True  # Use Beijing subset (36 nodes). If False, full dataset containing air quality values of 43 chinese cities will be included(437 nodes).
+  connectivity_type: none  # Options: 'none', 'distance', 'knn'
+  distance_threshold: 0.1  # For distance-based connectivity
+  knn_k: 5  # For knn-based connectivity
+  splits:
+    val_len: 0.1
+    test_len: 0.2
+
+#### Windowing params #########################################################
+# Paper Section 8.3.1: input window of 24 steps
+window: 24
+horizon: 1
+stride: 1
+batch_size: 64
+
+#### Model params #############################################################
+# Paper Section 8.3.1: TTS with 2-layer GRU + 2-layer GCN, hidden size 64
+model:
+  hidden_size: 64
+  enc_layers: 2
+  gcn_layers: 2
+  dropout: 0.0
+
+#### Training params ##########################################################
+epochs: 100
+patience: 5
+batches_epoch: -1
+
+graph_mode: pd
+mc_samples: 2
+lam: null
+sf_weight: 1.
+use_baseline: frechet
+variance_reduced: False
+
+graph_module:
+  hparams:
+    k: 5
+    tau: 1.
+    sampler: bes
+    dummy_nodes: 4
+
+clip_grad: True
+optimizer:
+  hparams:
+    lr: 0.001
+    weight_decay: 0.

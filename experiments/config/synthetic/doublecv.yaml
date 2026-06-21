@@ -1,0 +1,72 @@
+#### Experiment params ########################################################
+hydra:
+  run:
+    dir: logs/synthetic/doublecv_trials/${experiment_name}/node_num_${dataset.node_num}/${dataset.graph_type}_${dataset.connectivity}/${graph_module.hparams.sampler}/${graph_mode}/mc_cnt_${mc_samples}/baseline_${use_baseline}_gradlevel_${gradient_level}_doublecvmode_${doublecv_mode}_taylor_${use_taylor}_varred_${variance_reduced}/${now:%Y-%m-%d_%H-%M-%S}
+
+tags:
+  - 'synthetic'
+  - ${experiment_name}
+
+workers: 0
+num_threads: 1
+num_runs: 5
+
+#### Dataset params ###########################################################
+dataset:
+  name: gpolyvar # gpolyvar returns gpolyvar_tricom graph. stochastic block model and barabasi albert model graphs should be added.
+  graph_type: tricom
+  node_num: 30  # Number of nodes (must be divisible by 6 for tricom)
+  connectivity: line  # Community connectivity: "line" or "triangle"
+  time_series_noise: 0.4  # Standard deviation of Gaussian noise in autoregressive process
+  splits:
+    val_len: 0.1
+    test_len: 0.2
+
+#### Windowing params #########################################################
+window: 12
+horizon: 1
+stride: 1
+batch_size: 128
+
+#### Training params ##########################################################
+epochs: 100
+patience: 5
+batches_epoch: -1
+visualize: True
+
+graph_mode: sf
+mc_samples: 2
+lam: null
+sf_weight: 1.
+use_baseline: doublecv
+variance_reduced: False
+gradient_level: node_level
+doublecv_mode: full  # Options: 'none' (pure RLOO), 'bk_only', 'bj_only', 'full' (full Double-CV)
+use_taylor: False
+
+graph_module:
+  hparams:
+    k: 5
+    tau: 1.
+    sampler: bes
+    dummy_nodes: 0
+
+clip_grad: True
+optimizer:
+  hparams:
+    lr: 0.05
+    weight_decay: 0.
+
+#### Experiment name ###########################################################
+experiment_name: graph_id
+
+#### Learn One Edge specific params (only used when experiment_name=learn_one_edge)
+hidden_edge_idx: 0
+hidden_edge_seed: 42
+
+#### Learn Multiple Edges params (used when experiment_name=learn_multiple_edges or learn_multiple_edges_hard)
+# num_hidden_edges: Number of edges to hide and learn
+#   For learn_multiple_edges: cycles through edge types across communities
+#   For learn_multiple_edges_hard: uses BFS-like selection for adjacent edges
+num_hidden_edges: 5
+

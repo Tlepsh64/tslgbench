@@ -1,0 +1,80 @@
+#### Experiment params ########################################################
+hydra:
+  run:
+    dir: logs/real/${dataset.name}/${model_class}/residue2/${graph_module.hparams.sampler}/${graph_mode}/mc_cnt_${mc_samples}/baseline_${use_baseline}_varred_${variance_reduced}/${now:%Y-%m-%d_%H-%M-%S}
+
+tags:
+  - 'real'
+  - ${dataset.name}
+
+model_class: satorras_forecaster
+
+workers: 2
+num_threads: 1
+num_runs: 1
+start_run: 1
+
+#### Dataset params ###########################################################
+dataset:
+  name: metr_la #metr_la or pems_bay
+  impute_zeros: True  # Forward-fill zero values in METR-LA dataset
+  connectivity_type: none  # Options: 'none', 'distance', 'knn'
+  distance_threshold: 0.1  # For distance-based connectivity
+  knn_k: 30  # For knn-based connectivity (GTS paper uses similar values)
+  splits:
+    val_len: 0.1
+    test_len: 0.2
+
+#### Windowing params #########################################################
+# METR-LA: 5-minute intervals (same as PEMS-BAY)
+# GTS paper uses seq_len=12, horizon=12 (1 hour input, 1 hour prediction)
+window: 12
+horizon: 12
+stride: 1
+batch_size: 128
+
+#### Model params #############################################################
+# GTS paper Section 8.3: METR-LA uses similar settings to PEMS-BAY
+model:
+  hidden_size: 64  # Satorras et al. uses nf=64
+  enc_layers: 2
+  gcn_layers: 2  # Number of GNN layers in aggregation module
+  dropout: 0.0  # Satorras et al. does not use dropout
+  encoder_type: mlp  # Options: 'mlp', 'gru', 'lstm'
+  activation: silu  # Swish activation (Satorras et al.)
+  use_node_id: True  # Learnable node ID embeddings (c_i from Section 4)
+  node_emb_size: null  # Defaults to hidden_size if null
+  use_gate: False  # False = Cini-style (ungated), True = original Satorras (gated)
+  # Params for other models (kept for easy switching via model_class override)
+  heads: 4  # GAT attention heads
+  k: 2  # DCRNN diffusion steps
+  n_layers: 1  # DCRNN layers
+
+#### Training params ##########################################################
+epochs: 100
+patience: 10  # Higher patience for traffic forecasting
+batches_epoch: -1
+
+graph_mode: pd
+mc_samples: 1
+lam: null
+sf_weight: 1.
+use_baseline: rloo
+variance_reduced: False
+
+graph_module:
+  hparams:
+    k: 30  # graph sparsity parameter
+    tau: 1.
+    sampler: bes
+    dummy_nodes: 0  # Fewer dummy nodes for smaller graph (207 nodes vs 325 for PEMS-BAY)
+
+clip_grad: True
+clip_grad_val: 5.0  # Clip global gradient norm to 5.0 (matches GTS max_grad_norm)
+optimizer:
+  hparams:
+    lr: 0.003  # Cini C.3 initial learning rate
+    weight_decay: 0.
+scheduler:
+  milestones: [20, 30, 40]  # Satorras Table 9 for METR-LA
+  gamma: 0.1                # Decay factor (divide lr by 10)
